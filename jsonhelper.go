@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+	"math"
 )
 
 // Convert a slice of bytes into an array by ensuring it is wrapped
@@ -246,7 +246,7 @@ func jsonEntry(name string, v interface{}) (interface{}, bool) {
 	case []interface{}:
 		return v, true
 	default:
-		Debug("no type? ", name, " ", v)
+		//Debug("no type? ", name, " ", v)
 		return nil, false
 	}
 }
@@ -371,7 +371,7 @@ func (j JsonHelper) Helpers(n string) []JsonHelper {
 }
 
 // Gets slice of interface{}
-func (j JsonHelper) List(n string) []interface{} {
+func (j JsonHelper) List(n string, defVal []interface{}) []interface{} {
 	v := j.Get(n)
 	switch val := v.(type) {
 	case []string:
@@ -383,17 +383,18 @@ func (j JsonHelper) List(n string) []interface{} {
 	case []interface{}:
 		return val
 	}
-	return nil
+	return defVal
 }
 
-func (j JsonHelper) String(n string) string {
+func (j JsonHelper) String(n string, defVal string) string {
 	if v := j.Get(n); v != nil {
 		val, _ := CoerceString(v)
 		return val
 	}
-	return ""
+	return defVal
 }
-func (j JsonHelper) Strings(n string) []string {
+
+func (j JsonHelper) Strings(n string, defVal []string) []string {
 	if v := j.Get(n); v != nil {
 		//Debugf("Strings(%s) =>  %T %#v", n, v, v)
 		switch val := v.(type) {
@@ -415,15 +416,15 @@ func (j JsonHelper) Strings(n string) []string {
 			}
 			return sva
 		default:
-			return []string{j.String(n)}
+			return defVal
 		}
 	}
-	return nil
+	return defVal
 }
-func (j JsonHelper) Ints(n string) []int {
+func (j JsonHelper) Ints(n string, defVal []int) []int {
 	v := j.Get(n)
 	if v == nil {
-		return nil
+		return defVal
 	}
 	if sl, isSlice := v.([]interface{}); isSlice {
 		iva := make([]int, 0)
@@ -435,137 +436,79 @@ func (j JsonHelper) Ints(n string) []int {
 		}
 		return iva
 	}
-	return nil
-}
-func (j JsonHelper) StringSafe(n string) (string, bool) {
-	v := j.Get(n)
-	if v != nil {
-		if s, ok := v.(string); ok {
-			return s, ok
-		}
-	}
-	return "", false
+	return defVal
 }
 
-func (j JsonHelper) Int(n string) int {
-	i, ok := j.IntSafe(n)
+
+func (j JsonHelper) Int(n string, defVal int) int {
+	v := j.Get(n)
+	i, ok := valToInt(v)
 	if !ok {
-		return -1
+		return defVal
 	}
 	return i
 }
 
-func (j JsonHelper) IntSafe(n string) (int, bool) {
+func (j JsonHelper) Int64(n string, defVal int64) int64 {
 	v := j.Get(n)
-	return valToInt(v)
-}
-
-func (j JsonHelper) Int64(n string) int64 {
-	i64, ok := j.Int64Safe(n)
+	i64, ok := valToInt64(v)
 	if !ok {
-		return -1
+		return defVal
 	}
 	return i64
 }
 
-func (j JsonHelper) Int64Safe(n string) (int64, bool) {
-	v := j.Get(n)
-	return valToInt64(v)
-}
-
-func (j JsonHelper) Float64(n string) float64 {
+func (j JsonHelper) Float64(n string, defVal float64) float64 {
 	v := j.Get(n)
 	f64, err := CoerceFloat(v)
-	if err != nil {
-		return math.NaN()
+	if err != nil || math.IsNaN(f64){
+		return defVal
 	}
 	return f64
 }
 
-func (j JsonHelper) Float64Safe(n string) (float64, bool) {
-	v := j.Get(n)
-	if v == nil {
-		return math.NaN(), true
-	}
-	fv, err := CoerceFloat(v)
-	if err != nil {
-		return math.NaN(), false
-	}
-	return fv, true
-}
-
-func (j JsonHelper) Uint64(n string) uint64 {
+func (j JsonHelper) Uint64(n string, defVal uint64) uint64 {
 	v := j.Get(n)
 	if v != nil {
 		return CoerceUintShort(v)
 	}
-	return 0
+	return defVal
 }
 
-func (j JsonHelper) Uint64Safe(n string) (uint64, bool) {
-	v := j.Get(n)
-	if v != nil {
-		if uv, err := CoerceUint(v); err == nil {
-			return uv, true
-		}
-	}
-	return 0, false
-}
-
-func (j JsonHelper) BoolSafe(n string) (val bool, ok bool) {
+func (j JsonHelper) Bool(n string, defVal bool) bool {
 	v := j.Get(n)
 	if v != nil {
 		switch v.(type) {
 		case bool:
-			return v.(bool), true
+			return v.(bool)
 		case string:
 			if s := v.(string); len(s) > 0 {
 				if b, err := strconv.ParseBool(s); err == nil {
-					return b, true
+					return b
 				}
 			}
 		}
 	}
-	return false, false
+	return defVal
 }
 
-func (j JsonHelper) Bool(n string) bool {
-	val, ok := j.BoolSafe(n)
-	if !ok {
-		return false
-	}
-
-	return val
-}
-
-func (j JsonHelper) Map(n string) map[string]interface{} {
+func (j JsonHelper) Map(n string, defVal map[string]interface{}) map[string]interface{} {
 	v := j.Get(n)
 	if v == nil {
-		return nil
+		return defVal
 	}
 	m, ok := v.(map[string]interface{})
 	if !ok {
-		return nil
+		return defVal
 	}
 	return m
-}
-
-func (j JsonHelper) MapSafe(n string) (map[string]interface{}, bool) {
-	v := j.Get(n)
-	if v == nil {
-		return nil, false
-	}
-	m, ok := v.(map[string]interface{})
-	if !ok {
-		return nil, false
-	}
-	return m, true
 }
 
 func (j JsonHelper) PrettyJson() []byte {
 	jsonPretty, _ := json.MarshalIndent(j, "  ", "  ")
 	return jsonPretty
 }
+
 func (j JsonHelper) Keys() []string {
 	keys := make([]string, 0)
 	for key := range j {
@@ -573,6 +516,7 @@ func (j JsonHelper) Keys() []string {
 	}
 	return keys
 }
+
 func (j JsonHelper) HasKey(name string) bool {
 	if val := j.Get(name); val != nil {
 		return true
@@ -647,7 +591,7 @@ func flattenJsonValue(uv url.Values, v interface{}, k string) error {
 	// 	}
 	case map[string]bool:
 		// what to do?
-		Info("not implemented: [string]bool")
+		//Info("not implemented: [string]bool")
 	case map[string]interface{}:
 		if len(x) > 0 {
 			if err := flattenJsonMap(uv, x, k+"."); err != nil {
