@@ -1,4 +1,4 @@
-package gou
+package jsonhelper
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/araddon/gou/goutest"
+	. "github.com/fxding/jsonhelper/assert"
 	"github.com/bmizerany/assert"
 )
 

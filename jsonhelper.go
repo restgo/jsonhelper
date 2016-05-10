@@ -1,4 +1,4 @@
-package gou
+package jsonhelper
 
 import (
 	"bytes"

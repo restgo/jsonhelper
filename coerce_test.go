@@ -1,7 +1,7 @@
-package gou
+package jsonhelper
 
 import (
-	. "github.com/araddon/gou/goutest"
+	. "github.com/fxding/jsonhelper/assert"
 	"testing"
 )
 

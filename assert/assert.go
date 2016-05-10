@@ -1,4 +1,4 @@
-package goutest
+package assert
 
 import (
 	"fmt"
