@@ -1,7 +1,7 @@
 package jsonhelper
 
 import (
-	. "github.com/fxding/jsonhelper/assert"
+	. "github.com/restgo/jsonhelper/assert"
 	"testing"
 )
 

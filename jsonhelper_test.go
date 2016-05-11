@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/fxding/jsonhelper/assert"
+	. "github.com/restgo/jsonhelper/assert"
 	"github.com/bmizerany/assert"
 )
 

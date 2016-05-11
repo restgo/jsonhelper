@@ -1,7 +1,7 @@
 
 Go JSON Utilities
 
-JsonHelper [![GoDoc](https://godoc.org/github.com/fxding/jsonhelper?status.svg)](https://godoc.org/github.com/fxding/jsonhelper)
+JsonHelper [![GoDoc](https://godoc.org/github.com/restgo/jsonhelper?status.svg)](https://godoc.org/github.com/restgo/jsonhelper)
 ===========================================================================================================================
 
 A Go Json Helper, focused on Type coercion, and json path query. You can use it for your request body, or pass json config to you function. 
